@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backend Test</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  input { width: 70%; padding: 8px; font-size: 15px; }
+  button { padding: 8px 14px; font-size: 15px; }
+  .profile { display: flex; gap: 14px; align-items: center; margin-top: 20px; }
+  .profile img { width: 64px; height: 64px; border-radius: 6px; }
+  .err { color: #c0392b; } small { color: #777; }
+</style>
+</head>
+<body>
+<h2>Backend test: profile search</h2>
+<p><small>Vanity name, SteamID64, or profile URL.</small></p>
+<form id="f"><input id="q" placeholder="e.g. gabelogannewell"> <button>Search</button></form>
+<div id="out"></div>
+<script>
+const out = document.getElementById('out');
+document.getElementById('f').onsubmit = async (e) => {
+  e.preventDefault();
+  out.textContent = 'Searching...';
+  try {
+    const res = await fetch('/api/search?q=' + encodeURIComponent(document.getElementById('q').value));
+    const p = await res.json();
+    if (!res.ok) throw new Error(`${p.error} (${p.code})`);
+    out.innerHTML = `
+      <div class="profile">
+        <img src="${p.avatar}" alt="">
+        <div>
+          <b>${p.name}</b><br>
+          <small>SteamID64: ${p.steamid} · ${p.isPublic ? 'public' : 'private'} profile</small><br>
+          <a href="/api/profile/${p.steamid}" target="_blank">View stats JSON</a> ·
+          <a href="${p.profileUrl}" target="_blank">Steam page</a>
+        </div>
+      </div>`;
+  } catch (err) {
+    out.innerHTML = `<p class="err">${err.message}</p>`;
+  }
+};
+</script>
+</body>
+</html>
