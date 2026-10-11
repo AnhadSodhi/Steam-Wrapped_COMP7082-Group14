@@ -14,9 +14,7 @@ interface ProfileCardProps {
 export default function ProfileCard({ profile }: ProfileCardProps) {
   return (
     <div className="mt-6 w-full min-w-0 max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm transition hover:shadow-lg">
-      {/* Changed to flex-row so everything stays on one line */}
       <div className="flex flex-row items-center gap-3 sm:gap-4">
-        {/* Profile Information */}
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
           {profile.avatar && (
             <img
@@ -37,7 +35,6 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
           </div>
         </div>
 
-        {/* Public / Private Action (shrink-0 prevents it from squishing) */}
         {profile.isPublic ? (
           <a
             href={`/dashboard/${profile.steamid}`}
@@ -49,8 +46,7 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
         ) : (
           <p className="flex shrink-0 items-center justify-center gap-1.5 text-xs text-[var(--text-muted)] sm:text-sm sm:gap-2">
             <FaLock className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
-            <span className="hidden xs:inline">Private</span>
-            <span className="inline xs:hidden">Private</span>
+            <span>Private</span>
           </p>
         )}
       </div>
