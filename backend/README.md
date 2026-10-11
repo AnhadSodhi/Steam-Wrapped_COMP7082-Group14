@@ -1,35 +1,45 @@
 # Steam Wrapped Backend
 
-A Node.js backend server for the Steam Wrapped project.
+Node.js + Express server that fetches Steam data for the frontend. See [API.md](API.md) for every route, response shape, and error code.
 
 ## Getting Started
 
-First, run the development server:
+```bash
+npm install
+```
+
+Create a `.env` file in this folder (it's git-ignored, never commit it):
+
+```
+STEAM_API_KEY=your_key_here
+```
+
+Run the development server (restarts automatically when you edit a file):
 
 ```bash
 npm run dev
 ```
 
-To run the server without watch mode:
+The server runs on [http://localhost:3001](http://localhost:3001) by default, so it doesn't clash with the Next.js frontend on 3000. Set `PORT` to change it.
+
+To run without watch mode or a `.env` file (this is what Railway uses):
 
 ```bash
 npm start
 ```
 
-The server runs on [http://localhost:3001](http://localhost:3001) by default. Set the `PORT` environment variable to use a different port.
-
 ## Health Check
-
-Check that the backend is running by sending a `GET` request to [`/health`](http://localhost:3001/health):
 
 ```bash
 curl http://localhost:3001/health
 ```
 
-The endpoint responds with:
-
 ```json
-{
-  "status": "ok"
-}
+{ "status": "ok", "hasKey": true }
 ```
+
+`hasKey: false` means `STEAM_API_KEY` isn't set.
+
+## Test Page
+
+Open [http://localhost:3001](http://localhost:3001) for a minimal profile search page, useful for checking the backend without running the frontend.
