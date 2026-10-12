@@ -1,0 +1,37 @@
+@startuml
+title Steam Wrapped - Profile Search and Viewing State Diagram
+
+[*] --> Idle
+
+state "Search form ready" as Idle
+state "Validating query" as Validating
+state "Loading profile" as LoadingProfile
+state "Profile result shown" as ProfileLoaded
+state "Private profile shown" as PrivateProfile
+state "Loading dashboard data" as LoadingDashboard
+state "Dashboard shown" as DashboardDisplayed
+state "Error shown" as Error
+
+Idle --> Validating : submit form
+Validating --> Idle : query is blank
+Validating --> LoadingProfile : query is non-blank
+
+LoadingProfile --> ProfileLoaded : public profile returned
+LoadingProfile --> PrivateProfile : private profile returned
+LoadingProfile --> Error : not found / API error
+
+ProfileLoaded --> LoadingDashboard : select View Wrapped
+PrivateProfile --> Idle : edit search
+ProfileLoaded --> Idle : edit search
+
+LoadingDashboard --> DashboardDisplayed : profile stats returned
+LoadingDashboard --> Error : invalid ID / private games / API error
+
+Error --> Idle : edit search
+Error --> LoadingProfile : retry profile search
+Error --> LoadingDashboard : retry dashboard request
+
+DashboardDisplayed --> Idle : new search
+DashboardDisplayed --> [*] : leave application
+
+@enduml

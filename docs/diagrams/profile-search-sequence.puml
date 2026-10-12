@@ -1,0 +1,69 @@
+@startuml
+title Steam Wrapped - Search a Profile and View Information
+
+autonumber
+
+actor User
+participant "ProfileSearch\n(Next.js)" as Search
+participant "Next.js rewrite\n/api/*" as Rewrite
+participant "Express ApiRouter" as Api
+participant "SteamService" as Service
+participant "Steam Web API" as Steam
+participant "ProfileCard" as Card
+participant "Dashboard\n(Next.js)" as Dashboard
+
+User -> Search: Enter username, SteamID64,\nor profile URL
+User -> Search: Submit search form
+Search -> Search: Trim and validate query
+
+alt Query is empty
+  Search --> User: Keep form unchanged
+else Query is valid
+  Search -> Search: Set loading=true and clear error
+  Search -> Rewrite: GET /api/search?q=query
+  Rewrite -> Api: Forward GET /api/search?q=query
+  Api -> Service: resolveSteamId(query)
+
+  alt Vanity name or /id/ URL
+    Service -> Steam: ResolveVanityURL
+    Steam --> Service: SteamID64
+  else SteamID64 or /profiles/ URL
+    Service --> Service: Use supplied SteamID64
+  end
+
+  Service -> Steam: GetPlayerSummaries(SteamID64)
+  Steam --> Service: Player summary
+
+  alt Profile not found or Steam error
+    Service --> Api: Error with status and code
+    Api --> Rewrite: JSON error
+    Rewrite --> Search: Non-2xx response
+    Search --> User: Display error message
+  else Profile found
+    Service --> Api: SteamProfile
+    Api --> Rewrite: JSON profile
+    Rewrite --> Search: 200 profile response
+    Search -> Search: Set profile and loading=false
+    Search -> Card: Render profile
+
+    alt Profile is private
+      Card --> User: Show profile and Private status
+    else Profile is public
+      Card --> User: Show View Wrapped action
+      User -> Card: Select View Wrapped
+      Card -> Dashboard: Navigate to /dashboard/:steamid
+      Dashboard -> Rewrite: GET /api/profile/:steamid
+      Rewrite -> Api: Forward profile request
+      Api -> Service: getProfileStats(steamid)
+      Service -> Steam: GetPlayerSummaries + GetOwnedGames
+      Steam --> Service: Profile and owned games
+      Service --> Api: ProfileStats
+      Api --> Rewrite: JSON stats response
+      Rewrite --> Dashboard: 200 stats response
+      Dashboard -> Dashboard: Render profile and played games
+      Dashboard --> User: Display Steam Wrapped information
+    end
+  end
+end
+
+@enduml

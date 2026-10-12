@@ -1,0 +1,116 @@
+@startuml
+allowmixing
+
+title Steam Wrapped - Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "Frontend (Next.js)" {
+  class Home {
+    +render(): JSX.Element
+  }
+
+  class Navbar {
+    +render(): JSX.Element
+  }
+
+  class ProfileSearch {
+    -query: string
+    -profile: SteamProfile
+    -loading: boolean
+    -error: string
+    +handleSearch(event): Promise<void>
+    +render(): JSX.Element
+  }
+
+  class ProfileCard {
+    +profile: SteamProfile
+    +render(): JSX.Element
+  }
+
+  class Dashboard {
+    +steamid: string
+    -games: Game[]
+    -loading: boolean
+    -error: string
+    +loadProfile(): Promise<void>
+    +render(): JSX.Element
+  }
+
+  class SteamProfile {
+    +steamid: string
+    +name: string
+    +avatar: string
+    +profileUrl: string
+    +isPublic: boolean
+  }
+
+  class Game {
+    +appid: number
+    +name: string
+    +minutesTotal: number
+    +minutes2Weeks: number
+    +header: string
+  }
+}
+
+package "Backend (Express)" {
+  class ApiRouter {
+    +GET /api/search?q
+    +GET /api/profile/:steamid
+  }
+
+  class SteamService {
+    +resolveSteamId(input): Promise<string>
+    +getPlayerSummary(steamid): Promise<SteamProfile>
+    +getOwnedGames(steamid): Promise<Game[]>
+    +getProfileStats(steamid, options): Promise<ProfileStats>
+  }
+
+  class ProfileStats {
+    +profile: SteamProfile
+    +range: DateRange
+    +totals: Totals
+    +topGames: Game[]
+    +recentGames: Game[]
+    +allPlayed: Game[]
+  }
+
+  class DateRange {
+    +from: string
+    +to: string
+  }
+
+  class Totals {
+    +gamesOwned: number
+    +gamesPlayed: number
+    +neverPlayed: number
+    +hoursPlayed: number
+    +hoursLast2Weeks: number
+  }
+}
+
+cloud "Steam Web API" as SteamApi
+
+Home *-- Navbar
+Home *-- ProfileSearch
+ProfileSearch o-- ProfileCard
+ProfileSearch ..> SteamProfile : displays
+ProfileCard ..> SteamProfile : receives
+ProfileCard ..> Dashboard : links to
+Dashboard ..> Game : displays
+
+ApiRouter --> SteamService : delegates
+SteamService ..> SteamProfile : creates
+SteamService ..> Game : maps
+SteamService ..> ProfileStats : builds
+ProfileStats *-- DateRange
+ProfileStats *-- Totals
+ProfileStats o-- Game
+SteamService --> SteamApi : fetches data
+
+ProfileSearch ..> ApiRouter : /api/search
+Dashboard ..> ApiRouter : /api/profile/:steamid
+
+@enduml
