@@ -31,11 +31,12 @@ app.use((req, res, next) => {
 app.use('/api', require('./routes'));
 
 // Health check — confirms the server is up and the key is set
-app.get('/health', (req, res) => res.json({ ok: true, hasKey: !!process.env.STEAM_API_KEY }));
+app.get('/health', (req, res) => res.json({ status: 'ok', hasKey: !!process.env.STEAM_API_KEY }));
 
 // Minimal backend test page at the site root
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Railway sets PORT automatically
-const PORT = process.env.PORT || 3000;
+// Railway sets PORT automatically. Locally we use 3001 so it doesn't clash
+// with the Next.js frontend, which runs on 3000.
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));

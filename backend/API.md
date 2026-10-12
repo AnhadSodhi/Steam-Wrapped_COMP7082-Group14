@@ -4,7 +4,7 @@ Backend for the Steam stats site. All responses are JSON.
 
 **Base URL**
 - Production: `https://<our-railway-domain>`
-- Local: `http://localhost:3000`
+- Local: `http://localhost:3001` (the Next.js frontend runs on 3000)
 
 Every route is a `GET`. No authentication is needed from the frontend; the Steam API key stays on the server.
 
@@ -132,7 +132,7 @@ Every error returns JSON with a human-readable message and a stable `code` to sw
 
 ## Other
 
-- `GET /health` returns `{ "ok": true, "hasKey": true }`. Use it to check the server is up.
+- `GET /health` returns `{ "status": "ok", "hasKey": true }`. Use it to check the server is up.
 - `GET /` serves a minimal search page for testing the backend. It is not the real frontend.
 
 ## Running locally
@@ -148,5 +148,5 @@ npm run dev
 | Name | Required | Description |
 |------|----------|-------------|
 | `STEAM_API_KEY` | yes | Steam Web API key |
-| `ALLOWED_ORIGINS` | no | Comma-separated frontend URLs allowed to call the API, e.g. `https://our-site.up.railway.app,http://localhost:5173`. If unset, any origin is allowed. Set it before launch. |
-| `PORT` | no | Set automatically by Railway; defaults to 3000 locally |
+| `ALLOWED_ORIGINS` | no | Comma-separated frontend URLs allowed to call the API, e.g. `https://our-site.up.railway.app,http://localhost:3000`. If unset, any origin is allowed. Set it before launch. |
+| `PORT` | no | Set automatically by Railway; defaults to 3001 locally |

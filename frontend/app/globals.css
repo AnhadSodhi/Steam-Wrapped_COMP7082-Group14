@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b1727;
+  --surface: #162438;
+
+  --primary: #60a5fa;
+  --primary-button:  #3b82f6;
+  --primary-hover: #60a5fa;
+
+  --text-main: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+
+  --border: #374151;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text-main);
+}
