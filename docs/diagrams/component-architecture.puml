@@ -1,0 +1,61 @@
+@startuml
+title Steam Wrapped - High-Level Component Architecture
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor User
+
+package "Client" {
+  component "Web Browser" as Browser
+  component "Next.js UI" as Frontend {
+    component "Profile Search" as Search
+    component "Dashboard" as Dashboard
+    component "Summary Card" as Summary
+    component "Quiz Feature\n(planned)" as Quiz
+  }
+}
+
+package "Server" {
+  component "Express API" as Api
+  component "API Routes" as Routes
+  component "Steam Service Layer" as Service
+  component "In-memory cache\n(currently limited)" as Cache
+}
+
+cloud "Steam Web API" as Steam
+database "Persistent database\n(out of scope)" as Database
+
+User --> Browser
+Browser --> Frontend : HTTPS / page requests
+Frontend --> Routes : /api/search\n/api/profile/:steamid
+Routes --> Service : validate and delegate
+Service --> Steam : fetch profile and game data
+Service --> Cache : short-lived response reuse
+Cache ..> Service : optional cache hit
+Service --> Routes : JSON profile/stats
+Routes --> Frontend : JSON response
+
+Search --> Dashboard : navigate to profile
+Dashboard --> Summary : generate stats card
+Dashboard --> Quiz : launch quiz\n(planned)
+Quiz ..> Service : future quiz data
+
+Database ..> Service : future persistence\n(not implemented)
+
+note right of Cache
+Caching is deliberately small and
+in-memory. It reduces duplicate
+Steam calls without adding an
+operational data store.
+end note
+
+note right of Database
+No database is required for the
+current product scope. The app
+retrieves public Steam data on
+demand and does not aggregate
+large historical datasets.
+end note
+
+@enduml
