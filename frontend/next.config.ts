@@ -27,6 +27,13 @@ function getBackendUrl(): string {
 
 const nextConfig: NextConfig = {
   /* config options here */
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "avatars.steamstatic.com" },
+      { protocol: "https", hostname: "cdn.cloudflare.steamstatic.com" },
+      { protocol: "https", hostname: "media.steampowered.com" },
+    ],
+  },
   experimental: {
     agentFeedback: true,
   },
