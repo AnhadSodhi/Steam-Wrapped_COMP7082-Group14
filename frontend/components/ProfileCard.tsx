@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FaLock } from "react-icons/fa";
 
 interface SteamProfile {
@@ -17,9 +18,11 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
       <div className="flex flex-row items-center gap-3 sm:gap-4">
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
           {profile.avatar && (
-            <img
+            <Image
               src={profile.avatar}
               alt={`${profile.name}'s avatar`}
+              width={64}
+              height={64}
               className="h-12 w-12 shrink-0 rounded-xl object-cover sm:h-16 sm:w-16"
             />
           )}

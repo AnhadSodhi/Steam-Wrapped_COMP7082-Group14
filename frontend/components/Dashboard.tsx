@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaSteam } from "react-icons/fa";
+import Image from "next/image";
+import { FaChartBar, FaSteam } from "react-icons/fa";
+import SummaryCard from "./SummaryCard";
 
 interface Game {
   appid: number;
@@ -11,8 +13,23 @@ interface Game {
   header: string;
 }
 
+interface Profile {
+  name: string;
+  avatar?: string;
+}
+
+interface Totals {
+  gamesOwned: number;
+  gamesPlayed: number;
+  hoursPlayed: number;
+  hoursLast2Weeks: number;
+}
+
 export default function Dashboard({ steamid }: { steamid: string }) {
   const [games, setGames] = useState<Game[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [totals, setTotals] = useState<Totals | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -22,8 +39,12 @@ export default function Dashboard({ steamid }: { steamid: string }) {
         if (!res.ok) throw new Error("Failed to load games");
         return res.json();
       })
-      .then((data) => setGames(data.allPlayed ?? []))
-      .catch(() => setError("Unable to load games."))
+      .then((data) => {
+        setProfile(data.profile ?? null);
+        setTotals(data.totals ?? null);
+        setGames(data.allPlayed ?? []);
+      })
+      .catch(() => setError("Unable to load games and stats."))
       .finally(() => setLoading(false));
   }, [steamid]);
 
@@ -49,6 +70,39 @@ export default function Dashboard({ steamid }: { steamid: string }) {
           </a>
         </div>
 
+        {profile && totals && (
+          <div className="mt-8">
+            <button
+              type="button"
+              onClick={() => setShowSummary((visible) => !visible)}
+              className="flex items-center gap-2 rounded-xl bg-[var(--primary-button)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
+            >
+              <FaChartBar />
+              {showSummary ? "Hide Summary Card" : "Generate Summary Card"}
+            </button>
+          </div>
+        )}
+
+        {showSummary && profile && totals && (
+          <SummaryCard
+            profile={profile}
+            totals={totals}
+            topGame={
+              games[0]
+                ? {
+                    name: games[0].name,
+                    hours: games[0].minutesTotal / 60,
+                  }
+                : undefined
+            }
+            topGames={games.slice(0, 5).map((game) => ({
+              name: game.name,
+              hours: game.minutesTotal / 60,
+            }))}
+            onClose={() => setShowSummary(false)}
+          />
+        )}
+
         <section className="mt-10">
           <h2 className="mb-5 text-xl font-semibold">All Played Games</h2>
 
@@ -60,16 +114,21 @@ export default function Dashboard({ steamid }: { steamid: string }) {
             <p className="text-[var(--text-muted)]">No games found.</p>
           ) : (
             <div className="grid gap-5 sm:grid-cols-3 lg:grid-cols-4">
-              {games.map((game) => (
+              {games.map((game, index) => (
                 <div
                   key={game.appid}
                   className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] transition hover:shadow-lg"
                 >
-                  <img
-                    src={game.header}
-                    alt={game.name}
-                    className="aspect-video w-full object-cover"
-                  />
+                  <div className="relative aspect-video w-full">
+                    <Image
+                      src={game.header}
+                      alt={game.name}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover"
+                      loading={index === 0 ? "eager" : "lazy"}
+                    />
+                  </div>
 
                   <div className="p-4">
                     <h3 className="truncate font-semibold">{game.name}</h3>
