@@ -29,6 +29,13 @@ interface Totals {
 
 interface TopGame {
   name: string;
+  hoursLast2Weeks: number;
+  hoursTotal: number;
+  genre: string;
+}
+
+interface PlayedGame {
+  name: string;
   hours: number;
 }
 
@@ -36,8 +43,38 @@ interface SummaryCardProps {
   profile: SteamProfile;
   totals: Totals;
   topGame?: TopGame;
-  topGames: TopGame[];
+  topGames: PlayedGame[];
   onClose: () => void;
+}
+
+function getRecentDescriptor(hours: number) {
+  if (hours >= 40) return "Relentless";
+  if (hours >= 15) return "Rising";
+  if (hours >= 5) return "Keen";
+  return "Curious";
+}
+
+function getLifetimeDescriptor(hours: number) {
+  if (hours >= 1000) return "Legendary";
+  if (hours >= 250) return "Veteran";
+  if (hours >= 50) return "Seasoned";
+  return "New";
+}
+
+function getGenreRole(genre: string) {
+  const normalizedGenre = genre.toLowerCase();
+  if (normalizedGenre.includes("racing")) return "Speedster";
+  if (normalizedGenre.includes("sports")) return "Competitor";
+  if (normalizedGenre.includes("strategy")) return "Tactician";
+  if (normalizedGenre.includes("simulation")) return "Architect";
+  if (normalizedGenre.includes("role-playing") || normalizedGenre.includes("rpg")) {
+    return "Questmaster";
+  }
+  if (normalizedGenre.includes("shooter")) return "Sharpshooter";
+  if (normalizedGenre.includes("adventure")) return "Explorer";
+  if (normalizedGenre.includes("action")) return "Actioneer";
+  if (normalizedGenre.includes("indie")) return "Trailblazer";
+  return "Player";
 }
 
 export default function SummaryCard({
@@ -52,6 +89,9 @@ export default function SummaryCard({
   const cardRef = useRef<HTMLElement>(null);
   const shareUrl =
     typeof window === "undefined" ? "" : window.location.href;
+  const title = topGame
+    ? `${getRecentDescriptor(topGame.hoursLast2Weeks)} ${getLifetimeDescriptor(topGame.hoursTotal)} ${getGenreRole(topGame.genre)}`
+    : "Your Steam Wrapped summary";
 
   const renderCard = async () => {
     if (!cardRef.current) throw new Error("Summary card is not ready.");
@@ -138,7 +178,7 @@ export default function SummaryCard({
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
                 Steam Wrapped
               </p>
-              <h2 className="text-xl font-bold">{profile.name}&apos;s summary</h2>
+              <h2 className="text-xl font-bold">{title}</h2>
             </div>
           </div>
 
@@ -177,7 +217,7 @@ export default function SummaryCard({
             <p className="mt-1 truncate font-semibold">
               {topGame.name}
               <span className="ml-2 font-normal text-[var(--text-secondary)]">
-                {topGame.hours.toFixed(1)} hrs
+                {topGame.hoursLast2Weeks.toFixed(1)} hrs in the last 2 weeks
               </span>
             </p>
           </div>

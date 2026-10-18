@@ -13,6 +13,10 @@ interface Game {
   header: string;
 }
 
+interface MostPlayedGame extends Game {
+  genre: string;
+}
+
 interface Profile {
   name: string;
   avatar?: string;
@@ -27,6 +31,8 @@ interface Totals {
 
 export default function Dashboard({ steamid }: { steamid: string }) {
   const [games, setGames] = useState<Game[]>([]);
+  const [mostPlayedLast2Weeks, setMostPlayedLast2Weeks] =
+    useState<MostPlayedGame | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [totals, setTotals] = useState<Totals | null>(null);
   const [showSummary, setShowSummary] = useState(false);
@@ -43,6 +49,7 @@ export default function Dashboard({ steamid }: { steamid: string }) {
         setProfile(data.profile ?? null);
         setTotals(data.totals ?? null);
         setGames(data.allPlayed ?? []);
+        setMostPlayedLast2Weeks(data.mostPlayedLast2Weeks ?? null);
       })
       .catch(() => setError("Unable to load games and stats."))
       .finally(() => setLoading(false));
@@ -88,10 +95,12 @@ export default function Dashboard({ steamid }: { steamid: string }) {
             profile={profile}
             totals={totals}
             topGame={
-              games[0]
+              mostPlayedLast2Weeks
                 ? {
-                    name: games[0].name,
-                    hours: games[0].minutesTotal / 60,
+                    name: mostPlayedLast2Weeks.name,
+                    hoursLast2Weeks: mostPlayedLast2Weeks.minutes2Weeks / 60,
+                    hoursTotal: mostPlayedLast2Weeks.minutesTotal / 60,
+                    genre: mostPlayedLast2Weeks.genre,
                   }
                 : undefined
             }
