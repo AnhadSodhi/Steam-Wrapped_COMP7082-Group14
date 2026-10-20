@@ -115,10 +115,17 @@ export default function SummaryCard({
   };
 
   const copyLink = async () => {
-    if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
+    setActionError("");
+    try {
+      const imageUrl = await renderCard();
+      await navigator.clipboard.writeText(imageUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+      return true;
+    } catch {
+      setActionError("Unable to copy the card image link. Please try again.");
+      return false;
+    }
   };
 
   const shareToInstagram = async () => {
@@ -139,11 +146,13 @@ export default function SummaryCard({
         return;
       }
 
-      await copyLink();
+      const imageCopied = await copyLink();
       window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-      setActionError(
-        "The PNG was not shareable from this browser. The summary link was copied; upload the downloaded PNG to Instagram.",
-      );
+      if (imageCopied) {
+        setActionError(
+          "The PNG was not shareable from this browser. The card image link was copied; upload the downloaded PNG to Instagram.",
+        );
+      }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setActionError("Unable to prepare the Instagram share.");
@@ -300,7 +309,7 @@ export default function SummaryCard({
           <button
             type="button"
             onClick={copyLink}
-            aria-label="Copy summary link"
+            aria-label="Copy card image link"
             className="rounded-xl border border-[var(--border)] p-3 transition hover:bg-white/10"
           >
             {copied ? <FaCheck className="text-green-400" /> : <FaLink />}
