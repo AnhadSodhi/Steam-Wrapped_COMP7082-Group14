@@ -97,6 +97,19 @@ async function getOwnedGames(steamid) {
   });
 }
 
+async function getGameGenre(appid) {
+  return cached(`genre:${appid}`, 24 * 3600e3, async () => {
+    const res = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appid}`);
+    if (!res.ok) throw new SteamError(`Steam store API ${res.status}`, 502);
+
+    const data = await res.json();
+    const genres = data?.[appid]?.data?.genres;
+    return Array.isArray(genres) && genres.length > 0
+      ? genres.map((genre) => genre.description).join(', ')
+      : 'Unknown genre';
+  });
+}
+
 // Builds the stats payload the frontend / card generator consumes.
 // from/to (ISO dates, optional) filter by *last played* date — see note in README section of chat.
 async function getProfileStats(steamid, { from, to, top = 10 } = {}) {
@@ -118,6 +131,20 @@ async function getProfileStats(steamid, { from, to, top = 10 } = {}) {
   const recent = owned
     .filter((g) => g.minutes2Weeks > 0)
     .sort((a, b) => b.minutes2Weeks - a.minutes2Weeks);
+  let genre = 'Genre unavailable';
+  if (recent[0]) {
+    try {
+      genre = await getGameGenre(recent[0].appid);
+    } catch (err) {
+      console.warn(`[steam] Unable to load genre for app ${recent[0].appid}`, err);
+    }
+  }
+  const mostPlayedLast2Weeks = recent[0]
+    ? {
+        ...recent[0],
+        genre,
+      }
+    : null;
 
   return {
     profile,
@@ -135,6 +162,7 @@ async function getProfileStats(steamid, { from, to, top = 10 } = {}) {
       share: totalMinutes ? +(g.minutesTotal / totalMinutes).toFixed(3) : 0,
     })),
     recentGames: recent.slice(0, top),
+    mostPlayedLast2Weeks,
     allPlayed: played,
   };
 }
