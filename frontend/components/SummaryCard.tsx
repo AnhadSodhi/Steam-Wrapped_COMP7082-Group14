@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { toPng } from "html-to-image";
+import summaryTitles from "../data/summaryTitles.json";
 import {
   FaChartBar,
   FaCheck,
@@ -48,33 +49,40 @@ interface SummaryCardProps {
 }
 
 function getRecentDescriptor(hours: number) {
-  if (hours >= 40) return "Relentless";
-  if (hours >= 15) return "Rising";
-  if (hours >= 5) return "Keen";
-  return "Curious";
+  switch (true) {
+    case hours >= 40:
+      return summaryTitles.recentPlaytime["40"];
+    case hours >= 15:
+      return summaryTitles.recentPlaytime["15"];
+    case hours >= 5:
+      return summaryTitles.recentPlaytime["5"];
+    default:
+      return summaryTitles.recentPlaytime["0"];
+  }
 }
 
 function getLifetimeDescriptor(hours: number) {
-  if (hours >= 1000) return "Legendary";
-  if (hours >= 250) return "Veteran";
-  if (hours >= 50) return "Seasoned";
-  return "New";
+  switch (true) {
+    case hours >= 1000:
+      return summaryTitles.lifetimePlaytime["1000"];
+    case hours >= 250:
+      return summaryTitles.lifetimePlaytime["250"];
+    case hours >= 50:
+      return summaryTitles.lifetimePlaytime["50"];
+    default:
+      return summaryTitles.lifetimePlaytime["0"];
+  }
 }
 
 function getGenreRole(genre: string) {
-  const normalizedGenre = genre.toLowerCase();
-  if (normalizedGenre.includes("racing")) return "Speedster";
-  if (normalizedGenre.includes("sports")) return "Competitor";
-  if (normalizedGenre.includes("strategy")) return "Tactician";
-  if (normalizedGenre.includes("simulation")) return "Architect";
-  if (normalizedGenre.includes("role-playing") || normalizedGenre.includes("rpg")) {
-    return "Questmaster";
-  }
-  if (normalizedGenre.includes("shooter")) return "Sharpshooter";
-  if (normalizedGenre.includes("adventure")) return "Explorer";
-  if (normalizedGenre.includes("action")) return "Actioneer";
-  if (normalizedGenre.includes("indie")) return "Trailblazer";
-  return "Player";
+  const normalizedGenres = genre
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase());
+  const matchingGenre = summaryTitles.genres.find((entry) =>
+    normalizedGenres.includes(entry.genre.toLowerCase()),
+  );
+
+  return matchingGenre?.title ?? "Player";
 }
 
 export default function SummaryCard({
