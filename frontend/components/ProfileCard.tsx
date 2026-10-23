@@ -40,11 +40,11 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
 
         {profile.isPublic ? (
           <a
-            href={`/dashboard/${profile.steamid}`}
+            href={`/quiz/${profile.steamid}`}
             target="_blank"
             className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[var(--primary-button)] px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-[var(--primary-hover)] sm:px-4 sm:py-3 sm:text-sm sm:gap-2"
           >
-            <span>View Wrapped</span>
+            <span>Start Wrapped</span>
             <span aria-hidden="true">→</span>
           </a>
         ) : (
