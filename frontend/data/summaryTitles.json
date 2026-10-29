@@ -1,0 +1,45 @@
+{
+  "genres": [
+    { "id": "1", "genre": "Action", "title": "Action Hero" },
+    { "id": "37", "genre": "Free to Play", "title": "Free Spirit" },
+    { "id": "2", "genre": "Strategy", "title": "Mastermind" },
+    { "id": "25", "genre": "Adventure", "title": "Explorer" },
+    { "id": "23", "genre": "Indie", "title": "Trailblazer" },
+    { "id": "3", "genre": "RPG", "title": "Questmaster" },
+    { "id": "51", "genre": "Animation & Modeling", "title": "Animator" },
+    { "id": "58", "genre": "Video Production", "title": "Director" },
+    { "id": "4", "genre": "Casual", "title": "Casual Player" },
+    { "id": "28", "genre": "Simulation", "title": "Architect" },
+    { "id": "9", "genre": "Racing", "title": "Speedster" },
+    { "id": "73", "genre": "Violent", "title": "Action Maverick" },
+    { "id": "29", "genre": "Massively Multiplayer", "title": "Social Champion" },
+    { "id": "72", "genre": "Nudity", "title": "Unfiltered Player" },
+    { "id": "18", "genre": "Sports", "title": "Competitor" },
+    { "id": "70", "genre": "Early Access", "title": "Early Adopter" },
+    { "id": "74", "genre": "Gore", "title": "Fearless Player" },
+    { "id": "57", "genre": "Utilities", "title": "Power User" },
+    { "id": "52", "genre": "Audio Production", "title": "Sound Engineer" },
+    { "id": "53", "genre": "Design & Illustration", "title": "Creative Visionary" },
+    { "id": "59", "genre": "Web Publishing", "title": "Web Publisher" },
+    { "id": "55", "genre": "Photo Editing", "title": "Pixel Perfect" },
+    { "id": "54", "genre": "Education", "title": "Lifelong Learner" },
+    { "id": "56", "genre": "Software Training", "title": "Code Coach" },
+    { "id": "71", "genre": "Sexual Content", "title": "Unrestricted Player" },
+    { "id": "60", "genre": "Game Development", "title": "Game Maker" },
+    { "id": "50", "genre": "Accounting", "title": "Number Cruncher" },
+    { "id": "81", "genre": "Documentary", "title": "Story Seeker" },
+    { "id": "84", "genre": "Tutorial", "title": "Quick Study" }
+  ],
+  "recentPlaytime": {
+    "40": "Relentless",
+    "15": "Rising",
+    "5": "Keen",
+    "0": "Curious"
+  },
+  "lifetimePlaytime": {
+    "1000": "Legendary",
+    "250": "Veteran",
+    "50": "Seasoned",
+    "0": "New"
+  }
+}

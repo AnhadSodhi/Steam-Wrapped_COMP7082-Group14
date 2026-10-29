@@ -1,0 +1,62 @@
+@startuml
+title Steam Wrapped - Generate, Download, and Share Summary Card
+
+autonumber
+
+actor User
+participant "Dashboard\n(Next.js)" as Dashboard
+participant "SummaryCard\n(React component)" as Card
+participant "html-to-image" as Renderer
+participant "Browser DOM\nand Blob APIs" as Browser
+participant "Social platform\nor device share sheet" as Social
+
+User -> Dashboard: Open public profile dashboard
+Dashboard -> Dashboard: Fetch profile stats
+Dashboard -> Dashboard: Store profile, totals,\nand played games
+Dashboard --> User: Display dashboard
+
+User -> Dashboard: Click "Generate Summary Card"
+Dashboard -> Card: Render summary card
+Card --> User: Show totals, most played game,\nand top-games bar graph
+
+alt Download summary card
+  User -> Card: Click "Download"
+  Card -> Renderer: toPng(cardRef, pixelRatio=2)
+  Renderer -> Browser: Read rendered card styles and content
+  Browser --> Renderer: PNG data URL
+  Renderer --> Card: Return PNG data URL
+  Card -> Browser: Create download link
+  Browser --> User: Download steam-wrapped.png
+else Share to Instagram
+  User -> Card: Click Instagram
+  Card -> Renderer: toPng(cardRef, pixelRatio=2)
+  Renderer -> Browser: Render visible card as PNG
+  Browser --> Renderer: PNG data URL
+  Renderer --> Card: Return PNG data URL
+  Card -> Browser: Convert data URL to PNG File
+
+  alt Browser supports file sharing
+    Card -> Browser: navigator.share({ files: [image] })
+    Browser -> Social: Open device share sheet
+    Social --> User: Share PNG to Instagram
+  else Browser does not support file sharing
+    Card -> Browser: Copy summary URL
+    Browser --> User: Confirm link copied
+    Card -> Social: Open Instagram
+    Social --> User: Upload downloaded PNG manually
+    Card --> User: Show fallback instructions
+  end
+else Share through social link
+  alt X/Twitter, Facebook, or LinkedIn
+    User -> Card: Select social platform
+    Card -> Social: Open platform share URL
+    Social --> User: Compose social post
+  else Copy summary link
+    User -> Card: Click copy link
+    Card -> Browser: navigator.clipboard.writeText(summary URL)
+    Browser --> Card: Copy completed
+    Card --> User: Show copied confirmation
+  end
+end
+
+@enduml
