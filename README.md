@@ -1,4 +1,41 @@
-# Steam-Wrapped_COMP7082-Group14
+# Steam Wrapped
+
+Steam Wrapped turns a public Steam profile into a personalised summary of
+gaming habits, favourite genres, playtime, and achievements.
+
+## Project structure
+
+- [`frontend/`](./frontend/) - Next.js application and user interface.
+- [`backend/`](./backend/) - Express API that fetches data from Steam.
+- [`docs/diagrams/`](./docs/diagrams/) - PlantUML architecture and interaction diagrams.
+
+## Running locally
+
+The backend requires a Steam Web API key. Create `backend/.env` with:
+
+```env
+STEAM_API_KEY=your_key_here
+```
+
+Start the backend:
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+In a second terminal, start the frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and search for a public
+Steam profile. The frontend expects the backend at
+`http://localhost:3001`; set `BACKEND_URL` in `frontend/.env` to override it.
 
 ## Architecture diagrams
 
