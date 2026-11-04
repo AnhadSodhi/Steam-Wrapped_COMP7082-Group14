@@ -40,11 +40,34 @@ interface PlayedGame {
   hours: number;
 }
 
+interface Achievement {
+  name: string;
+  unlockedAt: string | null;
+  globalPercent: number | null;
+  game: {
+    appid: number;
+    name: string;
+  };
+}
+
+interface AchievementOverview {
+  totals: {
+    gamesWithAchievements: number;
+    unlocked: number;
+    total: number;
+    averageCompletion: number;
+    perfectGames: number;
+  };
+  rarestUnlocked: Achievement[];
+  recentUnlocks: Achievement[];
+}
+
 interface SummaryCardProps {
   profile: SteamProfile;
   totals: Totals;
   topGame?: TopGame;
   topGames: PlayedGame[];
+  achievements?: AchievementOverview;
   onClose: () => void;
 }
 
@@ -85,11 +108,20 @@ function getGenreRole(genre: string) {
   return matchingGenre?.title ?? "Player";
 }
 
+function formatAchievementDate(date: string) {
+  return new Date(date).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function SummaryCard({
   profile,
   totals,
   topGame,
   topGames,
+  achievements,
   onClose,
 }: SummaryCardProps) {
   const [copied, setCopied] = useState(false);
@@ -268,6 +300,104 @@ export default function SummaryCard({
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {achievements && (
+          <div className="mt-4 rounded-2xl border border-[var(--border)] bg-black/10 p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold">Achievement highlights</p>
+              <span className="text-xs text-[var(--text-muted)]">
+                top games
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  Lifetime earned
+                </p>
+                <p className="mt-1 text-xl font-bold">
+                  {achievements.totals.unlocked.toLocaleString()}
+                  <span className="text-sm font-normal text-[var(--text-muted)]">
+                    {" "}
+                    / {achievements.totals.total.toLocaleString()}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  Avg. completion
+                </p>
+                <p className="mt-1 text-xl font-bold">
+                  {(achievements.totals.averageCompletion * 100).toFixed(0)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  Perfect games
+                </p>
+                <p className="mt-1 text-xl font-bold">
+                  {achievements.totals.perfectGames}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  Games with achievements
+                </p>
+                <p className="mt-1 text-xl font-bold">
+                  {achievements.totals.gamesWithAchievements}
+                </p>
+              </div>
+            </div>
+
+            {achievements.rarestUnlocked[0] && (
+              <div className="mt-4 rounded-xl border border-[var(--border)] px-3 py-2.5">
+                <p className="text-xs text-[var(--text-muted)]">
+                  Rarest achievement
+                </p>
+                <p className="mt-1 truncate font-semibold">
+                  {achievements.rarestUnlocked[0].name}
+                  {achievements.rarestUnlocked[0].globalPercent !== null && (
+                    <span className="ml-2 font-normal text-[var(--text-secondary)]">
+                      {achievements.rarestUnlocked[0].globalPercent.toFixed(1)}%
+                      globally
+                    </span>
+                  )}
+                </p>
+                <p className="truncate text-xs text-[var(--text-muted)]">
+                  {achievements.rarestUnlocked[0].game.name}
+                </p>
+              </div>
+            )}
+
+            {achievements.recentUnlocks.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-xs text-[var(--text-muted)]">
+                  Recently earned
+                </p>
+                <div className="space-y-2">
+                  {achievements.recentUnlocks.slice(0, 3).map((achievement) => (
+                    <div
+                      key={`${achievement.game.appid}-${achievement.name}-${achievement.unlockedAt}`}
+                      className="flex items-center justify-between gap-3 text-xs"
+                    >
+                      <span className="truncate">
+                        <span className="font-semibold">{achievement.name}</span>
+                        <span className="ml-1 text-[var(--text-muted)]">
+                          · {achievement.game.name}
+                        </span>
+                      </span>
+                      {achievement.unlockedAt && (
+                        <span className="shrink-0 text-[var(--text-muted)]">
+                          {formatAchievementDate(achievement.unlockedAt)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

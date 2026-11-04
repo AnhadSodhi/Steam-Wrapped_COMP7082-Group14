@@ -43,12 +43,36 @@ interface Totals {
   hoursLast2Weeks: number;
 }
 
+interface Achievement {
+  name: string;
+  unlockedAt: string | null;
+  globalPercent: number | null;
+  game: {
+    appid: number;
+    name: string;
+  };
+}
+
+interface AchievementOverview {
+  totals: {
+    gamesWithAchievements: number;
+    unlocked: number;
+    total: number;
+    averageCompletion: number;
+    perfectGames: number;
+  };
+  rarestUnlocked: Achievement[];
+  recentUnlocks: Achievement[];
+}
+
 export default function Dashboard({ steamid }: { steamid: string }) {
   const [games, setGames] = useState<Game[]>([]);
   const [mostPlayedLast2Weeks, setMostPlayedLast2Weeks] =
     useState<MostPlayedGame | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [totals, setTotals] = useState<Totals | null>(null);
+  const [achievements, setAchievements] =
+    useState<AchievementOverview | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -60,9 +84,10 @@ export default function Dashboard({ steamid }: { steamid: string }) {
     setLoading(true);
     setError("");
     setShowSummary(false);
+    setAchievements(null);
     setFilters({ ...defaultGameFilters });
 
-    fetch(`/api/profile/${steamid}`)
+    const loadProfile = fetch(`/api/profile/${steamid}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load games");
         return res.json();
@@ -72,8 +97,24 @@ export default function Dashboard({ steamid }: { steamid: string }) {
         setTotals(data.totals ?? null);
         setGames(data.allPlayed ?? []);
         setMostPlayedLast2Weeks(data.mostPlayedLast2Weeks ?? null);
+      });
+
+    const loadAchievements = fetch(`/api/achievements/${steamid}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load achievements");
+        return res.json();
       })
-      .catch(() => setError("Unable to load games and stats."))
+      .then((data) => setAchievements(data));
+
+    Promise.allSettled([loadProfile, loadAchievements])
+      .then(([profileResult, achievementResult]) => {
+        if (profileResult.status === "rejected") {
+          setError("Unable to load games and stats.");
+        }
+        if (achievementResult.status === "rejected") {
+          setAchievements(null);
+        }
+      })
       .finally(() => setLoading(false));
   }, [steamid]);
 
@@ -199,6 +240,7 @@ export default function Dashboard({ steamid }: { steamid: string }) {
                 name: game.name,
                 hours: game.minutesTotal / 60,
               }))}
+              achievements={achievements ?? undefined}
               onClose={() => setShowSummary(false)}
             />
           </div>
