@@ -167,4 +167,12 @@ async function getProfileStats(steamid, { from, to, top = 10 } = {}) {
   };
 }
 
-module.exports = { SteamError, resolveSteamId, getPlayerSummary, getOwnedGames, getProfileStats };
+module.exports = {
+  SteamError,
+  call,
+  cached,
+  resolveSteamId,
+  getPlayerSummary,
+  getOwnedGames,
+  getProfileStats,
+};
