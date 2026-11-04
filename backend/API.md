@@ -111,6 +111,111 @@ Responses are cached for about 10 minutes, so very recent playtime may lag sligh
 
 ---
 
+## `GET /api/achievements/:steamid`
+
+Achievement summary across the player's **most-played games**. Use this for an achievements section on the dashboard or summary card.
+
+**Query parameters (optional)**
+
+| Name | Description |
+|------|-------------|
+| `top` | How many of the player's most-played games to check (default 10, max 25). Higher is slower the first time, since each game needs its own Steam requests. |
+
+**Example**
+```
+GET /api/achievements/76561197960287930?top=10
+```
+
+**Response `200`**
+```json
+{
+  "steamid": "76561197960287930",
+  "gamesChecked": 10,
+  "totals": {
+    "gamesWithAchievements": 7,
+    "unlocked": 312,
+    "total": 540,
+    "averageCompletion": 0.581,
+    "perfectGames": 2
+  },
+  "games": [
+    {
+      "appid": 620,
+      "name": "Portal 2",
+      "header": "https://cdn.cloudflare.steamstatic.com/steam/apps/620/header.jpg",
+      "icon": "https://media.steampowered.com/.../icon.jpg",
+      "hours": 41.2,
+      "unlocked": 51,
+      "total": 51,
+      "completion": 1,
+      "perfect": true,
+      "lastUnlockedAt": "2026-03-02T19:40:00.000Z"
+    }
+  ],
+  "rarestUnlocked": [ "...up to 5 achievements (see shape below), rarest first, each with a game: { appid, name }..." ],
+  "recentUnlocks":  [ "...up to 10 achievements, newest first, each with a game: { appid, name }..." ]
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `gamesChecked` | How many games were looked at. Games without achievements are left out of `games`, so `games` can be shorter. |
+| `totals` | Only counts the games in `games`, not the player's whole library. |
+| `averageCompletion` / `completion` | Fraction from 0 to 1. Multiply by 100 for a percentage. |
+| `games` | Sorted by completion, highest first. |
+| `rarestUnlocked` | The player's unlocked achievements with the lowest `globalPercent`. Great for "your rarest achievement" on the summary card. |
+
+---
+
+## `GET /api/achievements/:steamid/:appid`
+
+Every achievement in one game for one player, unlocked and locked. Use this for a per-game achievements view. The `appid` comes from any game object in the other responses.
+
+**Example**
+```
+GET /api/achievements/76561197960287930/620
+```
+
+**Response `200`**
+```json
+{
+  "appid": 620,
+  "name": "Portal 2",
+  "header": "https://cdn.cloudflare.steamstatic.com/steam/apps/620/header.jpg",
+  "icon": "https://media.steampowered.com/.../icon.jpg",
+  "minutesTotal": 2472,
+  "hasAchievements": true,
+  "total": 51,
+  "unlocked": 30,
+  "completion": 0.588,
+  "achievements": [
+    {
+      "apiName": "ACH_WAKE_UP",
+      "name": "Wake Up Call",
+      "description": "Survive the manual override",
+      "hidden": false,
+      "unlocked": true,
+      "unlockedAt": "2026-03-02T19:40:00.000Z",
+      "globalPercent": 71.4,
+      "icon": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/620/....jpg"
+    }
+  ]
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `hasAchievements` | `false` (with `total: 0` and an empty list) for games that have no achievements. This is not an error. |
+| `achievements` | Unlocked first (newest first), then locked (easiest first, by `globalPercent`). |
+| `icon` | Colour icon if unlocked, grey version if locked. Can be `null`. |
+| `globalPercent` | % of all Steam players who have this achievement. Lower is rarer. Can be `null`. |
+| `hidden` | Steam marks some achievements secret. `description` is often empty for these; consider showing "Hidden achievement" while locked. |
+| `unlockedAt` | ISO date, or `null` if locked. |
+
+**Images:** achievement icons are served from Steam's CDN (often `cdn.akamai.steamstatic.com` or `steamcdn-a.akamaihd.net`). If you display them with Next.js `<Image>`, add those hostnames to `images.remotePatterns` in `next.config.ts`.
+
+---
+
 ## Errors
 
 Every error returns JSON with a human-readable message and a stable `code` to switch on:
@@ -121,8 +226,8 @@ Every error returns JSON with a human-readable message and a stable `code` to sw
 
 | Status | `code` | When | Suggested UI |
 |--------|--------|------|--------------|
-| 400 | `BAD_INPUT` | Empty search, or `:steamid` isn't 17 digits | "Enter a Steam name or profile link" |
-| 403 | `PRIVATE` | Player's game details are private | "This player's games are private" + how to change Steam privacy |
+| 400 | `BAD_INPUT` | Empty search, `:steamid` isn't 17 digits, or `:appid` isn't a number | "Enter a Steam name or profile link" |
+| 403 | `PRIVATE` | Player's game details are private (applies to achievements too) | "This player's games are private" + how to change Steam privacy |
 | 404 | `NOT_FOUND` | No profile matches the search | "No Steam profile found" |
 | 429 | `RATE_LIMITED` | Steam is throttling us | "Try again in a minute" |
 | 502 | `STEAM_ERROR` | Steam API is down or errored | "Steam isn't responding, try again" |

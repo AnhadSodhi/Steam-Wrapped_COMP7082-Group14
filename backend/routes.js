@@ -3,6 +3,7 @@
 
 const express = require('express');
 const steam = require('./steam');
+const achievements = require('./achievements');
 
 const router = express.Router();
 
@@ -35,6 +36,32 @@ router.get('/profile/:steamid', wrap(async (req, res) => {
   });
   res.set('Cache-Control', 'public, max-age=300');
   res.json(stats);
+}));
+
+// GET /api/achievements/:steamid?top=10
+// → achievement summary across the player's most-played games
+router.get('/achievements/:steamid', wrap(async (req, res) => {
+  const { steamid } = req.params;
+  if (!/^\d{17}$/.test(steamid)) {
+    return res.status(400).json({ error: 'Invalid SteamID64', code: 'BAD_INPUT' });
+  }
+  const overview = await achievements.getAchievementOverview(steamid, {
+    top: Math.min(parseInt(req.query.top, 10) || 10, 25),
+  });
+  res.set('Cache-Control', 'public, max-age=300');
+  res.json(overview);
+}));
+
+// GET /api/achievements/:steamid/:appid
+// → every achievement in one game, unlocked or not
+router.get('/achievements/:steamid/:appid', wrap(async (req, res) => {
+  const { steamid, appid } = req.params;
+  if (!/^\d{17}$/.test(steamid) || !/^\d{1,10}$/.test(appid)) {
+    return res.status(400).json({ error: 'Invalid SteamID64 or app ID', code: 'BAD_INPUT' });
+  }
+  const detail = await achievements.getGameAchievementDetail(steamid, appid);
+  res.set('Cache-Control', 'public, max-age=300');
+  res.json(detail);
 }));
 
 module.exports = router;

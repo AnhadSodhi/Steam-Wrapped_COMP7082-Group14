@@ -34,6 +34,7 @@ document.getElementById('f').onsubmit = async (e) => {
           <b>${p.name}</b><br>
           <small>SteamID64: ${p.steamid} · ${p.isPublic ? 'public' : 'private'} profile</small><br>
           <a href="/api/profile/${p.steamid}" target="_blank">View stats JSON</a> ·
+          <a href="/api/achievements/${p.steamid}" target="_blank">Achievements JSON</a> ·
           <a href="${p.profileUrl}" target="_blank">Steam page</a>
         </div>
       </div>`;
