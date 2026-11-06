@@ -1,5 +1,3 @@
-// Steam Wrapped quiz: randomly choose 3 number + 2 game questions.
-
 export type Game = {
   appid: number;
   name: string;
@@ -7,6 +5,18 @@ export type Game = {
   minutes2Weeks: number;
   lastPlayed: string | null;
   header: string;
+};
+
+export type AchievementStats = {
+  gamesChecked: number;
+  totals: { unlocked: number; total: number; perfectGames: number };
+  games: { appid: number; name: string; header: string; unlocked: number }[];
+  rarestUnlocked: {
+    apiName: string;
+    name: string;
+    globalPercent: number | null;
+    game: { appid: number; name: string };
+  }[];
 };
 
 export type SteamStats = {
@@ -18,6 +28,7 @@ export type SteamStats = {
     hoursPlayed?: number;
     hoursLast2Weeks?: number;
   };
+  achievements?: AchievementStats | null; // NEW, optional
 };
 
 export type Question = {
@@ -40,13 +51,14 @@ type Data = {
   neverPlayed: number;
   hoursPlayed: number;
   hoursLast2Weeks: number;
+  achievements: AchievementStats | null;
 };
 
 type Basic = Pick<Question, "id" | "category" | "title">;
 type NumberItem = Basic & {
   question: string | ((data: Data) => string);
   answer: (data: Data) => number;
-  unit: "hours" | "games";
+  unit: "hours" | "games" | "achievements";
 };
 type GameItem = Basic & {
   question: string;
@@ -241,6 +253,77 @@ function makeGame(item: GameItem, data: Data): Question | null {
   };
 }
 
+const achievementNumbers: NumberItem[] = [
+  {
+    id: "ach-total",
+    category: "TROPHY SHELF",
+    title: "The Trophy Shelf",
+    question: (d) =>
+      `How many achievements have you unlocked across your ${d.achievements!.gamesChecked} most-played games?`,
+    answer: (d) => d.achievements!.totals.unlocked,
+    unit: "achievements",
+  },
+  {
+    id: "ach-perfect",
+    category: "COMPLETIONIST",
+    title: "Perfectionist",
+    question: "How many of your games have you completed to 100%?",
+    answer: (d) => d.achievements!.totals.perfectGames,
+    unit: "games",
+  },
+];
+
+function makeAchievementGames(a: AchievementStats): Question[] {
+  const result: Question[] = [];
+
+  // Game with the most unlocked achievements
+  const sorted = [...a.games].sort((x, y) => y.unlocked - x.unlocked);
+  const winner = sorted[0];
+  if (winner) {
+    const others = sorted
+      .slice(1)
+      .filter((g) => g.unlocked !== winner.unlocked)
+      .slice(0, 3);
+    if (others.length === 3) {
+      result.push({
+        id: "ach-most-unlocked",
+        category: "ACHIEVEMENT HUNTER",
+        title: "The Achievement Magnet",
+        question: "Which game has the most achievements unlocked?",
+        options: shuffle([winner, ...others]).map((g) => ({
+          id: String(g.appid),
+          label: g.name,
+          image: g.header,
+        })),
+        correctAnswer: String(winner.appid),
+        reveal: `${winner.name}: ${winner.unlocked} achievements unlocked`,
+      });
+    }
+  }
+
+  // Rarest achievement you own
+  const rare = a.rarestUnlocked.filter((u) => u.globalPercent !== null);
+  if (rare.length >= 4 && rare[0].globalPercent! < rare[1].globalPercent!) {
+    const pool = rare.slice(0, 4);
+    const key = (u: (typeof pool)[number]) => `${u.game.appid}:${u.apiName}`;
+    result.push({
+      id: "ach-rarest",
+      category: "RARE FIND",
+      title: "The Rarest Trophy",
+      question:
+        "Which of these achievements is the rarest one you've unlocked?",
+      options: shuffle(pool).map((u) => ({
+        id: key(u),
+        label: `${u.name} (${u.game.name})`,
+      })),
+      correctAnswer: key(pool[0]),
+      reveal: `${pool[0].name} — only ${pool[0].globalPercent}% of players have it`,
+    });
+  }
+
+  return result;
+}
+
 function pick(pool: Question[], count: number, previousIds: string[]) {
   const fresh = shuffle(pool.filter((q) => !previousIds.includes(q.id)));
   const old = shuffle(pool.filter((q) => previousIds.includes(q.id)));
@@ -272,6 +355,7 @@ export function generateQuestions(
     hoursLast2Weeks:
       stats.totals?.hoursLast2Weeks ??
       Math.round(recent.reduce((n, g) => n + g.minutes2Weeks, 0) / 60),
+    achievements: stats.achievements ?? null,
   };
 
   const numbers = numberQuestions.map((q) => makeNumber(q, data));
@@ -279,14 +363,25 @@ export function generateQuestions(
     .map((q) => makeGame(q, data))
     .filter((q): q is Question => q !== null);
   const selected = [
-    ...pick(numbers, 3, previousIds),
+    ...pick(numbers, 2, previousIds),
     ...pick(games, 2, previousIds),
   ];
-  if (selected.length < 5) {
+  if (selected.length < 4) {
     const extra = [...numbers, ...games].filter(
       (q) => !selected.some((s) => s.id === q.id),
     );
     selected.push(...pick(extra, 5 - selected.length, previousIds));
+  }
+
+  const ach = stats.achievements;
+  if (ach && ach.games.length) {
+    const achPool = [
+      ...achievementNumbers
+        .filter((q) => q.id !== "ach-perfect" || ach.totals.perfectGames > 0)
+        .map((q) => makeNumber(q, data)),
+      ...makeAchievementGames(ach),
+    ];
+    selected.push(...pick(achPool, 1, previousIds));
   }
   return shuffle(selected);
 }

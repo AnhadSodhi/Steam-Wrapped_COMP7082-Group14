@@ -1,8 +1,10 @@
 // routes.js — Express routes for search + profile stats
 // Mount with: app.use('/api', require('./routes'));
 
-const express = require('express');
-const steam = require('./steam');
+const express = require("express");
+const steam = require("./steam");
+const achievements = require("./achievements");
+const compare = require("./compare");
 
 const router = express.Router();
 
@@ -10,31 +12,96 @@ const wrap = (fn) => (req, res) =>
   fn(req, res).catch((err) => {
     const status = err.status || 500;
     if (status >= 500) console.error(err);
-    res.status(status).json({ error: err.message, code: err.code || 'ERROR' });
+    res.status(status).json({ error: err.message, code: err.code || "ERROR" });
   });
 
 // GET /api/search?q=<vanity | steamid64 | profile url>
 // → lightweight profile card for the search results UI
-router.get('/search', wrap(async (req, res) => {
-  const steamid = await steam.resolveSteamId(req.query.q);
-  const profile = await steam.getPlayerSummary(steamid);
-  res.json(profile);
-}));
+router.get(
+  "/search",
+  wrap(async (req, res) => {
+    const steamid = await steam.resolveSteamId(req.query.q);
+    const profile = await steam.getPlayerSummary(steamid);
+    res.json(profile);
+  }),
+);
 
 // GET /api/profile/:steamid?from=2026-01-01&to=2026-12-31&top=10
 // → full stats payload (also what a shared link /u/:steamid would fetch)
-router.get('/profile/:steamid', wrap(async (req, res) => {
-  const { steamid } = req.params;
-  if (!/^\d{17}$/.test(steamid)) {
-    return res.status(400).json({ error: 'Invalid SteamID64', code: 'BAD_INPUT' });
-  }
-  const stats = await steam.getProfileStats(steamid, {
-    from: req.query.from,
-    to: req.query.to,
-    top: Math.min(parseInt(req.query.top, 10) || 10, 50),
-  });
-  res.set('Cache-Control', 'public, max-age=300');
-  res.json(stats);
-}));
+router.get(
+  "/profile/:steamid",
+  wrap(async (req, res) => {
+    const { steamid } = req.params;
+    if (!/^\d{17}$/.test(steamid)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid SteamID64", code: "BAD_INPUT" });
+    }
+    const stats = await steam.getProfileStats(steamid, {
+      from: req.query.from,
+      to: req.query.to,
+      top: Math.min(parseInt(req.query.top, 10) || 10, 50),
+    });
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(stats);
+  }),
+);
+
+// GET /api/achievements/:steamid?top=10
+// → achievement summary across the player's most-played games
+router.get(
+  "/achievements/:steamid",
+  wrap(async (req, res) => {
+    const { steamid } = req.params;
+    if (!/^\d{17}$/.test(steamid)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid SteamID64", code: "BAD_INPUT" });
+    }
+    const overview = await achievements.getAchievementOverview(steamid, {
+      top: Math.min(parseInt(req.query.top, 10) || 10, 25),
+    });
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(overview);
+  }),
+);
+
+// GET /api/achievements/:steamid/:appid
+// → every achievement in one game, unlocked or not
+router.get(
+  "/achievements/:steamid/:appid",
+  wrap(async (req, res) => {
+    const { steamid, appid } = req.params;
+    if (!/^\d{17}$/.test(steamid) || !/^\d{1,10}$/.test(appid)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid SteamID64 or app ID", code: "BAD_INPUT" });
+    }
+    const detail = await achievements.getGameAchievementDetail(steamid, appid);
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(detail);
+  }),
+);
+
+// GET /api/compare?a=<steamid|vanity|url>&b=<steamid|vanity|url>
+// → side-by-side stats, shared games and similarity scores
+router.get(
+  "/compare",
+  wrap(async (req, res) => {
+    const [a, b] = await Promise.all([
+      steam.resolveSteamId(req.query.a),
+      steam.resolveSteamId(req.query.b),
+    ]);
+    if (a === b) {
+      return res.status(400).json({
+        error: "Pick a different player to compare with",
+        code: "BAD_INPUT",
+      });
+    }
+    const result = await compare.getComparison(a, b);
+    res.set("Cache-Control", "public, max-age=300");
+    res.json(result);
+  }),
+);
 
 module.exports = router;

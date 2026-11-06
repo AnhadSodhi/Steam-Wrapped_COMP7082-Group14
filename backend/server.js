@@ -27,7 +27,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// API routes: /api/search and /api/profile/:steamid
+// API routes: /api/search, /api/profile/:steamid, /api/achievements/...
 app.use('/api', require('./routes'));
 
 // Health check — confirms the server is up and the key is set
