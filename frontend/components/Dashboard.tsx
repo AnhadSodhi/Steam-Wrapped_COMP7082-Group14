@@ -7,6 +7,7 @@ import {
   FaClock,
   FaGamepad,
   FaHistory,
+  FaUserFriends,
 } from "react-icons/fa";
 
 import SummaryCard from "./SummaryCard";
@@ -27,6 +28,7 @@ import PlayedGames, {
   type FetchState,
   type Game,
 } from "./PlayedGames";
+import Link from "next/link";
 
 interface Profile {
   name: string;
@@ -297,6 +299,14 @@ export default function Dashboard({ steamid }: { steamid: string }) {
               {label}
             </button>
           ))}
+          <Link
+            href={`/compare/${steamid}`}
+            className="ml-auto inline-flex items-center gap-2 rounded-xl border border-blue-400/60 px-4 py-2 text-sm font-semibold text-blue-400 transition hover:bg-blue-500 hover:text-white"
+          >
+            <FaUserFriends aria-hidden="true" />
+            <span className="hidden sm:inline">Compare with a friend</span>
+            <span className="sm:hidden">Compare</span>
+          </Link>
         </nav>
 
         {loading || error ? (
