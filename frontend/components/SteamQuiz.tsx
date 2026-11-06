@@ -68,11 +68,19 @@ export default function SteamQuiz({ steamid }: { steamid: string }) {
 
     async function loadQuestions() {
       try {
-        const response = await fetch(
-          `/api/profile/${encodeURIComponent(steamid)}`,
-        );
-        if (!response.ok) throw new Error("Failed to load profile");
-        const data: SteamStats = await response.json();
+        const [profileRes, achRes] = await Promise.all([
+          fetch(`/api/profile/${encodeURIComponent(steamid)}`),
+          fetch(`/api/achievements/${encodeURIComponent(steamid)}`).catch(
+            () => null,
+          ),
+        ]);
+        if (!profileRes.ok) throw new Error("Failed to load profile");
+        const profile: SteamStats = await profileRes.json();
+        const achievements = achRes?.ok
+          ? await achRes.json().catch(() => null)
+          : null;
+
+        const data: SteamStats = { ...profile, achievements };
         setStats(data);
         setQuestions(generateQuestions(data));
       } catch {
@@ -208,7 +216,6 @@ export default function SteamQuiz({ steamid }: { steamid: string }) {
     );
   }
 
-  // ACTIVE QUESTION
   const question = questions[current];
   const answered = selected !== null;
   const isCorrect = selected === question.correctAnswer;
