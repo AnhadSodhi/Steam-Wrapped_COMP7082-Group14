@@ -18,7 +18,7 @@ export default function Home() {
 
         <p className="mt-6 max-w-xl text-lg text-[var(--text-secondary)]">
           Search a public Steam profile and discover your gaming
-          habits,favourites, and statistics.
+          habits, favourites, and statistics.
         </p>
 
         <ProfileSearch />
