@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { toPng } from "html-to-image";
 import summaryTitles from "../data/summaryTitles.json";
@@ -133,6 +133,21 @@ export default function SummaryCard({
     ? `${getRecentDescriptor(topGame.hoursLast2Weeks)} ${getLifetimeDescriptor(topGame.hoursTotal)} ${getGenreRole(topGame.genre)}`
     : "Your Steam Wrapped summary";
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   const renderCard = async () => {
     if (!cardRef.current) throw new Error("Summary card is not ready.");
     return toPng(cardRef.current, {
@@ -200,14 +215,22 @@ export default function SummaryCard({
   };
 
   return (
-    <section
-      ref={cardRef}
-      aria-label={`${profile.name}'s Steam Wrapped summary`}
-      className="relative mt-8 w-full max-w-3xl overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-xl"
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4 backdrop-blur-sm sm:p-8"
+      onClick={onClose}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(96,165,250,0.3),_transparent_45%)]" />
+      <div className="flex min-h-full items-center justify-center">
+        <section
+          ref={cardRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${profile.name}'s Steam Wrapped summary`}
+          onClick={(event) => event.stopPropagation()}
+          className="relative my-4 w-full max-w-3xl overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-xl sm:my-8"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(96,165,250,0.3),_transparent_45%)]" />
 
-      <div className="relative p-6 sm:p-8">
+          <div className="relative p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             {profile.avatar ? (
@@ -458,7 +481,9 @@ export default function SummaryCard({
             {actionError}
           </p>
         )}
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   );
 }
