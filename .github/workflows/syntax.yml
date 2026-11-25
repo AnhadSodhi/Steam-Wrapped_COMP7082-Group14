@@ -1,4 +1,4 @@
-name: Backend Syntax Check
+name: Syntax Checks
 
 on:
   push:
